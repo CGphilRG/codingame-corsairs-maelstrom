@@ -181,7 +181,7 @@
     <h1><span class="icon icon-example">&nbsp;</span><span>Code Source &amp; Crédits</span></h1>
     <div class="statement-examples-text">
       <p>Le code source complet de l'arbitre (Referee), du viewer et des bots de référence est disponible sur GitHub :
-        <a href="https://github.com/codingame-team/codingame-corsairs-maelstrom" target="_blank" rel="noopener noreferrer">https://github.com/codingame-team/codingame-corsairs-maelstrom</a>
+        <a href="https://github.com/CGphilRG/codingame-corsairs-maelstrom" target="_blank" rel="noopener noreferrer">https://github.com/CGphilRG/codingame-corsairs-maelstrom</a>
       </p>
       <p><b>Crédits &amp; Inspiration :</b> Conception originale inspirée des jeux d'arène à physique inertielle et combats navals. Développé avec le SDK officiel CodinGame Game Engine.</p>
     </div>
