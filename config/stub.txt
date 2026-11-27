@@ -31,11 +31,11 @@ vx: Horizontal velocity of the ship
 vy: Vertical velocity of the ship
 gold: Amount of gold currently carried by the ship (increases ship mass!)
 cooldown: Turns remaining before cannons can FIRE (always 0 in Wood 3 and Wood 2)
-chestCount: Number of active floating treasure chests
+chestCount: Number of currently uncollected (active) floating treasure chests
 chestId: Unique identifier of the treasure chest
 cx: X coordinate of the treasure chest
 cy: Y coordinate of the treasure chest
 chestGold: Gold value of the treasure chest
 
 OUTPUT
-One line per owned ship (in the order your ships were given): [SAIL <x> <y> <power> | ANCHOR] [FIRE <tx> <ty>] [MSG <text>]
+One line per owned ship (in the order your ships were given): [SAIL <x> <y> <power> | ANCHOR | FIRE <tx> <ty>] [FIRE <tx> <ty>] [MSG <text>]

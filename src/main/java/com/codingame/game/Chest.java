@@ -5,7 +5,7 @@ import com.codingame.gameengine.module.entities.Sprite;
 import com.codingame.gameengine.module.entities.Text;
 
 public class Chest {
-    private final int id;
+    private int id;
     private int x;
     private int y;
     private int gold;
@@ -22,7 +22,8 @@ public class Chest {
         this.gold = gold;
     }
 
-    public void respawn(int newX, int newY, int newGold) {
+    public void respawn(int newId, int newX, int newY, int newGold) {
+        this.id = newId;
         this.x = newX;
         this.y = newY;
         this.gold = newGold;

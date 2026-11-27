@@ -4,7 +4,7 @@
   <!-- LEAGUE ALERT -->
   <!-- BEGIN level1 -->
   <div style="color: #7cc576; background-color: rgba(124, 197, 118,.1); padding: 20px; margin-bottom: 15px; text-align: left">
-    <p style="margin-bottom: 0"><b>Wood 3 League:</b> Command <b>1 Corsair Ship</b> with inertial physics and variable cargo mass. Collect floating treasure chests and deliver them to your Home Port!</p>
+    <p style="margin-bottom: 0"><b>Wood 3 League:</b> Command <b>1 Corsair Ship</b> with inertial physics where carried Gold increases ship mass and reduces acceleration. Collect floating treasure chests and deliver them to your Home Port!</p>
   </div>
   <!-- END -->
   <!-- BEGIN level2 -->
@@ -31,36 +31,49 @@
     <h1><span class="icon icon-rules">&nbsp;</span><span>Rules</span></h1>
     <div class="statement-rules-content">
       <!-- BEGIN level1 -->
-      <p>The battle takes place in a rotationally symmetric <const>1600</const>&times;<const>900</const> sea sector with inertial kinematics and variable cargo mass. Coordinates follow the standard screen convention: <var>x</var> increases to the right, <var>y</var> increases downwards, and <const>(0, 0)</const> is the top-left corner.</p>
+      <p>The battle takes place in a rotationally symmetric <const>1600</const>&times;<const>900</const> sea sector with inertial kinematics and cargo-dependent ship mass (carrying more Gold makes your ship heavier and slower to accelerate). Coordinates follow the standard screen convention: <var>x</var> increases to the right, <var>y</var> increases downwards, and <const>(0, 0)</const> is the top-left corner.</p>
       <!-- END -->
       <!-- BEGIN level2 level3 -->
-      <p>The battle takes place in a rotationally symmetric <const>1600</const>&times;<const>900</const> sea sector with inertial kinematics, variable cargo mass, and rotational ocean currents. Coordinates follow the standard screen convention: <var>x</var> increases to the right, <var>y</var> increases downwards, and <const>(0, 0)</const> is the top-left corner.</p>
+      <p>The battle takes place in a rotationally symmetric <const>1600</const>&times;<const>900</const> sea sector with inertial kinematics, cargo-dependent ship mass (carrying more Gold makes your ship heavier and slower to accelerate), and rotational ocean currents. Coordinates follow the standard screen convention: <var>x</var> increases to the right, <var>y</var> increases downwards, and <const>(0, 0)</const> is the top-left corner.</p>
       <!-- END -->
 
       <h3 style="font-size: 16px; font-weight: 700; padding-top: 10px">Turn Resolution Order</h3>
       <ol>
-        <li><b>Inertial Sailing (<action>SAIL</action> <var>x</var> <var>y</var> <var>power</var>):</b> Applies thrust (<const>0</const> &le; <var>power</var> &le; <const>100</const>) toward (<var>x</var>, <var>y</var>). Heavier gold cargo increases ship mass and reduces acceleration:
+        <li><b>Inertial Sailing (<action>SAIL</action> <var>x</var> <var>y</var> <var>power</var>):</b> Applies thrust (<const>0</const> &le; <var>power</var> &le; <const>100</const>) toward (<var>x</var>, <var>y</var>). Carried Gold increases ship inertia mass and reduces acceleration:
           <br><code>accel = power / (1.0 + 0.15 * gold)</code></li>
         <!-- BEGIN level2 level3 -->
-        <li><b>Emergency Brake (<action>ANCHOR</action>):</b> Immediately cuts current velocity by <const>75%</const> (<code>vx *= 0.25, vy *= 0.25</code>) and halves the pull of the Maelstrom for that turn.</li>
-        <li><b>The Maelstrom Vortex:</b> Within <const>380</const> units of the center (<const>800</const>, <const>450</const>), a counter-clockwise swirl and inward suction vector are added to every ship's velocity each turn. Any ship ending its movement within <const>65</const> units of (<const>800</const>, <const>450</const>) is <b>shipwrecked</b>: it loses all carried Gold and respawns at its Home Port!</li>
+        <li><b>Emergency Brake (<action>ANCHOR</action>):</b> Immediately cuts current velocity by <const>75%</const> (<code>vx *= 0.25, vy *= 0.25</code>) and halves the Maelstrom vortex currents for that turn.</li>
+        <li><b>The Maelstrom Vortex Currents:</b> Within <const>380</const> units of the center (<const>800</const>, <const>450</const>), counter-clockwise swirl and inward suction currents are added to every ship's velocity each turn (see <b>Expert Rules</b> for exact formulas).</li>
         <!-- END -->
         <!-- BEGIN level1 -->
-        <li><b>Kinematics &amp; Water Drag:</b> Each turn, after thrust is added to (<var>vx</var>, <var>vy</var>), the ship moves to (<var>x</var> + <var>vx</var>, <var>y</var> + <var>vy</var>), and water drag multiplies (<var>vx</var>, <var>vy</var>) by <const>0.78</const>.</li>
+        <li><b>Kinematics &amp; Water Drag:</b> Each turn, after thrust is added to (<var>vx</var>, <var>vy</var>), the ship moves to (<var>x</var> + <var>vx</var>, <var>y</var> + <var>vy</var>), bounces/clamps at the sector boundary if reached, and water drag then multiplies (<var>vx</var>, <var>vy</var>) by <const>0.78</const>.</li>
         <!-- END -->
         <!-- BEGIN level2 level3 -->
-        <li><b>Kinematics &amp; Water Drag:</b> Each turn, after thrust and currents are added to (<var>vx</var>, <var>vy</var>), the ship moves to (<var>x</var> + <var>vx</var>, <var>y</var> + <var>vy</var>), and water drag multiplies (<var>vx</var>, <var>vy</var>) by <const>0.78</const>.</li>
+        <li><b>Kinematics &amp; Water Drag:</b> Each turn, after thrust and Maelstrom currents are added to (<var>vx</var>, <var>vy</var>), the ship moves to (<var>x</var> + <var>vx</var>, <var>y</var> + <var>vy</var>), bounces/clamps at the sector boundary if reached, and water drag then multiplies (<var>vx</var>, <var>vy</var>) by <const>0.78</const>.</li>
         <!-- END -->
         <!-- BEGIN level3 -->
-        <li><b>Cannons (<action>FIRE</action> <var>tx</var> <var>ty</var>):</b> Can be used standalone or appended to <action>SAIL</action> or <action>ANCHOR</action> when <var>cooldown</var> = <const>0</const> (Euclidean range from the firing ship &le; <const>450</const>, sets <var>cooldown</var> to <const>2</const>). Any ship within <const>115</const> units of (<var>tx</var>, <var>ty</var>) is blasted away from the impact point and loses up to <const>2</const> carried Gold (plundered directly by the firing ship if it hit an enemy!).</li>
+        <li><b>Cannons (<action>FIRE</action> <var>tx</var> <var>ty</var>):</b> Executed after ship movement, either standalone or appended to <action>SAIL</action> or <action>ANCHOR</action> when <var>cooldown</var> = <const>0</const> (sets <var>cooldown</var> to <const>2</const>). If (<var>tx</var>, <var>ty</var>) is farther than <const>450</const> units from the firing ship, the impact point is clamped to distance <const>450</const> along the aim direction. Every ship (friendly or opposing) ending movement within <const>115</const> units of the impact point is blasted away (see <b>Expert Rules</b>). If a hit ship belongs to your opponent and carries Gold, up to <const>2</const> of its carried Gold is <b>plundered directly</b> (immediately transferred to the firing ship's cargo; if the enemy carries <const>0</const> Gold or no enemy is hit, no Gold is transferred, and hitting your own ship never transfers Gold).</li>
         <!-- END -->
-        <li><b>Plunder &amp; Delivery:</b> Passing within <const>85</const> units of a Treasure Chest loads its Gold aboard. Entering within <const>130</const> units of your Home Port delivers all carried Gold to your score!</li>
+        <!-- BEGIN level2 level3 -->
+        <li><b>Maelstrom Eye Shipwreck:</b> Any ship whose position at this stage is within <const>65</const> units of (<const>800</const>, <const>450</const>) is <b>shipwrecked</b>: it loses all carried Gold, has both <var>vx</var> and <var>vy</var> reset to <const>0</const>, and respawns at its Home Port.</li>
+        <!-- END -->
+        <li><b>Plunder &amp; Delivery:</b> Only a ship's <b>final position</b> at the end of the turn is checked (not intermediate points along its movement path):
+          <ul>
+            <li><b>Chest Pickup:</b> Ending within <const>85</const> units of an active Treasure Chest loads its Gold aboard and removes that chest from the sea (it becomes inactive). Only <b>one</b> ship can collect a given chest: if multiple ships end within <const>85</const> units of the same chest, the closest ship collects it (lowest <var>shipId</var> on an exact tie).</li>
+            <li><b>Home Port Delivery:</b> Checked immediately after chest pickup (and cannon plunder), so ending within <const>130</const> units of your Home Port delivers all carried Gold &mdash; including any Gold collected or plundered during that same turn!</li>
+            <li><b>Chest Lifecycle &amp; Respawn:</b> The sector starts with <const>8</const> uncollected (active) chests (<const>2</const> Royal Chests worth <const>5</const> Gold at (<const>800</const>, <const>260</const>) and (<const>800</const>, <const>640</const>), plus <const>3</const> rotationally symmetric pairs worth <const>2</const> or <const>3</const> Gold). Active chests never move or change their Gold value. Whenever fewer than <const>4</const> active chests remain at the end of a turn, <const>1</const> new rotationally symmetric pair of chests spawns with fresh <var>chestId</var>s (<const>4</const> Gold each if within <const>280</const> units of (<const>800</const>, <const>450</const>), or <const>2</const> Gold otherwise).</li>
+          </ul>
+        </li>
       </ol>
-      <!-- BEGIN level1 level2 -->
-      <p><b>Unexecutable Actions:</b> Out-of-range <var>power</var> values are clamped to [<const>0</const>, <const>100</const>], and ship positions are clamped to the sea sector bounds. Syntactically valid actions do not cause defeat.</p>
+      <p><b>Sector Boundary:</b> Ships are confined within a <const>40</const>-unit margin inside the sea sector (<const>40</const> &le; <var>x</var> &le; <const>1560</const>, <const>40</const> &le; <var>y</var> &le; <const>860</const>). When a ship reaches or exceeds a boundary, its coordinate stops (is clamped) at that edge and the corresponding perpendicular velocity component bounces back damped by <const>0.4</const> (<code>vx = -0.4 * vx</code> or <code>vy = -0.4 * vy</code>) before water drag (<const>0.78</const>) is applied.</p>
+      <!-- BEGIN level1 -->
+      <p><b>Unexecutable Actions:</b> Out-of-range <var>power</var> values are clamped to [<const>0</const>, <const>100</const>]. Syntactically valid <action>ANCHOR</action> or <action>FIRE</action> commands are ignored in Wood 3 and do not cause defeat.</p>
+      <!-- END -->
+      <!-- BEGIN level2 -->
+      <p><b>Unexecutable Actions:</b> Out-of-range <var>power</var> values are clamped to [<const>0</const>, <const>100</const>]. Syntactically valid <action>FIRE</action> commands are ignored in Wood 2 and do not cause defeat.</p>
       <!-- END -->
       <!-- BEGIN level3 -->
-      <p><b>Unexecutable Actions:</b> Out-of-range <var>power</var> values are clamped to [<const>0</const>, <const>100</const>], and <action>FIRE</action> commands issued while <var>cooldown</var> &gt; <const>0</const> or targeting beyond range <const>450</const> are simply ignored and do not cause defeat.</p>
+      <p><b>Unexecutable Actions:</b> Out-of-range <var>power</var> values are clamped to [<const>0</const>, <const>100</const>]. <action>FIRE</action> commands issued while <var>cooldown</var> &gt; <const>0</const> are ignored, and <action>FIRE</action> targets farther than <const>450</const> units are clamped to distance <const>450</const>. Syntactically valid commands do not cause defeat.</p>
       <!-- END -->
 
       <!-- VICTORY CONDITIONS -->
@@ -70,7 +83,8 @@
           <div class="title">Victory Conditions</div>
           <div class="text">
             <ul style="padding-bottom:0">
-              <li>You are the first to deliver at least <const>35</const> Gold to your Home Port (with a strictly higher score than your opponent), or you have delivered more Gold after <const>120</const> turns.</li>
+              <li>You are the first to deliver at least <const>35</const> Gold to your Home Port, or you have delivered more Gold than your opponent after <const>120</const> turns.</li>
+              <li>If both players have the same delivered Gold after <const>120</const> turns (or reach <const>35</const> tied on the same turn), the player carrying more Gold aboard wins (which is why carried Gold is shown in parentheses on the end screen).</li>
             </ul>
           </div>
         </div>
@@ -83,12 +97,42 @@
           <div class="title">Defeat Conditions</div>
           <div class="text">
             <ul style="padding-bottom:0">
-              <li>You have delivered less Gold than your opponent at the end of the game.</li>
+              <li>You have delivered less Gold than your opponent at the end of the game (or the same delivered Gold with less Gold carried aboard).</li>
               <li>Your program does not respond within the allotted time or outputs a malformed/unrecognized command.</li>
             </ul>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- EXPERT RULES -->
+  <div class="statement-section statement-expertrules">
+    <h1><span class="icon icon-expertrules">&nbsp;</span><span>Expert Rules</span></h1>
+    <div class="statement-rules-content">
+      <p><b>Sector Boundary Clamping &amp; Bounce:</b> When computing <code>nx = x + vx</code> and <code>ny = y + vy</code>:</p>
+      <ul>
+        <li>If <code>nx &lt; 40</code> or <code>nx &gt; 1560</code>: clamp <code>nx</code> to [<const>40</const>, <const>1560</const>] and set <code>vx = -0.4 * vx</code>.</li>
+        <li>If <code>ny &lt; 40</code> or <code>ny &gt; 860</code>: clamp <code>ny</code> to [<const>40</const>, <const>860</const>] and set <code>vy = -0.4 * vy</code>.</li>
+      </ul>
+      <!-- BEGIN level2 level3 -->
+      <p><b>Maelstrom Vortex Vector Field:</b> Let <code>rx = 800 - x</code>, <code>ry = 450 - y</code>, and <code>r = hypot(rx, ry)</code>. When <const>0.001</const> &lt; <code>r</code> &le; <const>380</const>:</p>
+      <ul>
+        <li>Radial unit vector (inward): <code>urx = rx / r</code>, <code>ury = ry / r</code></li>
+        <li>Tangential unit vector (counter-clockwise on screen): <code>utx = -ury</code>, <code>uty = urx</code></li>
+        <li>Magnitude: <code>intensity = 1.0 - (r / 380.0)</code>, <code>swirl = 18.0 + 26.0 * intensity</code>, <code>pull = 10.0 + 22.0 * intensity</code></li>
+        <li>Velocity delta added before movement: <code>(utx * swirl + urx * pull) * anchorDamping</code>, where <code>anchorDamping = 0.5</code> if <action>ANCHOR</action> was used and <const>1.0</const> otherwise.</li>
+      </ul>
+      <!-- END -->
+      <!-- BEGIN level3 -->
+      <p><b>Cannon Blast Knockback:</b> Cannons resolve in ascending <var>shipId</var> order. For impact point (<var>fx</var>, <var>fy</var>) (clamped to distance <const>450</const> from shooter), every ship with distance <code>d = hypot(tx - fx, ty - fy) &le; 115</code> receives:</p>
+      <ul>
+        <li>Direction: <code>ux = (tx - fx) / d</code>, <code>uy = (ty - fy) / d</code> (if <code>d &lt; 0.001</code>, <code>ux = (shooterX &lt; fx ? 1 : -1)</code>, <code>uy = 0</code>)</li>
+        <li>Falloff scale: <code>scale = 1.0 - 0.35 * (d / 115.0)</code></li>
+        <li>Velocity impulse: <code>vx += ux * 95.0 * scale</code>, <code>vy += uy * 95.0 * scale</code></li>
+        <li>Immediate displacement (clamped to [<const>40</const>, <const>1560</const>] &times; [<const>40</const>, <const>860</const>]): <code>tx += ux * 45.0 * scale</code>, <code>ty += uy * 45.0 * scale</code>.</li>
+      </ul>
+      <!-- END -->
     </div>
   </div>
 
@@ -100,6 +144,9 @@
       <div class="text">
         <p><span class="statement-lineno">Line 1:</span> 3 space-separated integers <var>width</var>, <var>height</var> and <var>leagueLevel</var>, the width and height of the sea sector (<const>1600</const>&times;<const>900</const>) and the current Wood division (<const>3</const> for Wood 3, <const>2</const> for Wood 2, <const>1</const> for Wood 1).</p>
         <p><span class="statement-lineno">Line 2:</span> 6 space-separated integers <var>myPortX</var>, <var>myPortY</var>, <var>oppPortX</var>, <var>oppPortY</var>, <var>maelstromX</var> and <var>maelstromY</var>, the coordinates of your Home Port, your opponent's Home Port, and the central Maelstrom.</p>
+        <!-- BEGIN level1 -->
+        <p>The Maelstrom has no effect in the current league.</p>
+        <!-- END -->
       </div>
     </div>
     <div class="blk">
@@ -121,18 +168,21 @@
           <li><var>cooldown</var>: turns remaining before cannons can fire again.</li>
           <!-- END -->
         </ul>
-        <p><span class="statement-lineno">Next line:</span> an integer <var>chestCount</var>, the number of active floating treasure chests.</p>
+        <p><span class="statement-lineno">Next line:</span> an integer <var>chestCount</var>, the number of currently uncollected (active) floating treasure chests.</p>
         <p><span class="statement-lineno">Next <var>chestCount</var> lines:</span> 4 space-separated integers <var>chestId</var>, <var>cx</var>, <var>cy</var> and <var>chestGold</var>, the unique identifier, coordinates, and Gold value of each chest.</p>
       </div>
     </div>
     <div class="blk">
       <div class="title">Output for One Game Turn</div>
       <div class="text">
-        <!-- BEGIN level1 level2 -->
-        <p><span class="statement-lineno">One line per owned ship</span> (in the exact order they appear in the input), containing one movement command:</p>
+        <!-- BEGIN level1 -->
+        <p><span class="statement-lineno">One line per owned ship</span> (in the exact order they appear in the input), containing one movement command (<action>SAIL</action>):</p>
+        <!-- END -->
+        <!-- BEGIN level2 -->
+        <p><span class="statement-lineno">One line per owned ship</span> (in the exact order they appear in the input), containing one movement command (<action>SAIL</action> or <action>ANCHOR</action>):</p>
         <!-- END -->
         <!-- BEGIN level3 -->
-        <p><span class="statement-lineno">One line per owned ship</span> (in the exact order they appear in the input), containing one movement command optionally followed by a cannon shot:</p>
+        <p><span class="statement-lineno">One line per owned ship</span> (in the exact order they appear in the input), containing one movement command (<action>SAIL</action> or <action>ANCHOR</action>) optionally followed by a cannon shot, or a standalone cannon shot:</p>
         <!-- END -->
         <ul>
           <li><action>SAIL</action> <var>x</var> <var>y</var> <var>power</var> to thrust toward integer coordinates (<var>x</var>, <var>y</var>) with thrust <var>power</var> (<const>0</const>&ndash;<const>100</const>).</li>
@@ -141,7 +191,7 @@
           <!-- END -->
         </ul>
         <!-- BEGIN level3 -->
-        <p>A <action>SAIL</action> or <action>ANCHOR</action> command is optionally followed by a cannon shot (which may also be issued standalone):</p>
+        <p>A cannon shot is issued using the following syntax:</p>
         <ul>
           <li><action>FIRE</action> <var>tx</var> <var>ty</var> to fire cannons at the integer target coordinates (<var>tx</var>, <var>ty</var>).</li>
         </ul>
@@ -153,7 +203,7 @@
         <p>Examples: <action>SAIL 800 450 90</action> or <action>ANCHOR</action></p>
         <!-- END -->
         <!-- BEGIN level3 -->
-        <p>Example: <action>SAIL 800 450 90 FIRE 750 400</action></p>
+        <p>Examples: <action>SAIL 800 450 90 FIRE 750 400</action> or <action>FIRE 750 400</action></p>
         <!-- END -->
         <p>You may optionally append <action>MSG</action> <var>text</var> at the end of a line to display a message in the viewer.</p>
       </div>
@@ -164,11 +214,14 @@
         <var>width</var> = <const>1600</const>, <var>height</var> = <const>900</const><br>
         <!-- BEGIN level1 -->
         <var>shipCount</var> = <const>2</const><br>
+        <const>4</const> &le; <var>chestCount</var> &le; <const>8</const> (initially <const>8</const>)<br>
         <!-- END -->
         <!-- BEGIN level2 level3 -->
         <var>shipCount</var> = <const>4</const><br>
+        <const>2</const> &le; <var>chestCount</var> &le; <const>8</const> (initially <const>8</const>)<br>
         <!-- END -->
-        <const>0</const> &le; <var>chestCount</var> &le; <const>8</const><br>
+        <const>2</const> &le; <var>chestGold</var> &le; <const>5</const><br>
+        <var>gold</var> &ge; <const>0</const><br>
         Response time for first turn &le; <const>1000</const> ms<br>
         Response time for one turn &le; <const>50</const> ms<br>
         Maximum number of turns: <const>120</const>

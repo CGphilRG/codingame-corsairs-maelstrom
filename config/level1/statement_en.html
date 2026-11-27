@@ -2,7 +2,7 @@
 <div class="statement-body">
   <!-- LEAGUE ALERT -->
   <div style="color: #7cc576; background-color: rgba(124, 197, 118,.1); padding: 20px; margin-bottom: 15px; text-align: left">
-    <p style="margin-bottom: 0"><b>Wood 3 League:</b> Command <b>1 Corsair Ship</b> with inertial physics and variable cargo mass. Collect floating treasure chests and deliver them to your Home Port!</p>
+    <p style="margin-bottom: 0"><b>Wood 3 League:</b> Command <b>1 Corsair Ship</b> with inertial physics where carried Gold increases ship mass and reduces acceleration. Collect floating treasure chests and deliver them to your Home Port!</p>
   </div>
 
   <!-- GOAL -->
@@ -17,16 +17,23 @@
   <div class="statement-section statement-rules">
     <h1><span class="icon icon-rules">&nbsp;</span><span>Rules</span></h1>
     <div class="statement-rules-content">
-      <p>The battle takes place in a rotationally symmetric <const>1600</const>&times;<const>900</const> sea sector with inertial kinematics and variable cargo mass. Coordinates follow the standard screen convention: <var>x</var> increases to the right, <var>y</var> increases downwards, and <const>(0, 0)</const> is the top-left corner.</p>
+      <p>The battle takes place in a rotationally symmetric <const>1600</const>&times;<const>900</const> sea sector with inertial kinematics and cargo-dependent ship mass (carrying more Gold makes your ship heavier and slower to accelerate). Coordinates follow the standard screen convention: <var>x</var> increases to the right, <var>y</var> increases downwards, and <const>(0, 0)</const> is the top-left corner.</p>
 
       <h3 style="font-size: 16px; font-weight: 700; padding-top: 10px">Turn Resolution Order</h3>
       <ol>
-        <li><b>Inertial Sailing (<action>SAIL</action> <var>x</var> <var>y</var> <var>power</var>):</b> Applies thrust (<const>0</const> &le; <var>power</var> &le; <const>100</const>) toward (<var>x</var>, <var>y</var>). Heavier gold cargo increases ship mass and reduces acceleration:
+        <li><b>Inertial Sailing (<action>SAIL</action> <var>x</var> <var>y</var> <var>power</var>):</b> Applies thrust (<const>0</const> &le; <var>power</var> &le; <const>100</const>) toward (<var>x</var>, <var>y</var>). Carried Gold increases ship inertia mass and reduces acceleration:
           <br><code>accel = power / (1.0 + 0.15 * gold)</code></li>
-        <li><b>Kinematics &amp; Water Drag:</b> Each turn, after thrust is added to (<var>vx</var>, <var>vy</var>), the ship moves to (<var>x</var> + <var>vx</var>, <var>y</var> + <var>vy</var>), and water drag multiplies (<var>vx</var>, <var>vy</var>) by <const>0.78</const>.</li>
-        <li><b>Plunder &amp; Delivery:</b> Passing within <const>85</const> units of a Treasure Chest loads its Gold aboard. Entering within <const>130</const> units of your Home Port delivers all carried Gold to your score!</li>
+        <li><b>Kinematics &amp; Water Drag:</b> Each turn, after thrust is added to (<var>vx</var>, <var>vy</var>), the ship moves to (<var>x</var> + <var>vx</var>, <var>y</var> + <var>vy</var>), bounces/clamps at the sector boundary if reached, and water drag then multiplies (<var>vx</var>, <var>vy</var>) by <const>0.78</const>.</li>
+        <li><b>Plunder &amp; Delivery:</b> Only a ship's <b>final position</b> at the end of the turn is checked (not intermediate points along its movement path):
+          <ul>
+            <li><b>Chest Pickup:</b> Ending within <const>85</const> units of an active Treasure Chest loads its Gold aboard and removes that chest from the sea (it becomes inactive). Only <b>one</b> ship can collect a given chest: if multiple ships end within <const>85</const> units of the same chest, the closest ship collects it (lowest <var>shipId</var> on an exact tie).</li>
+            <li><b>Home Port Delivery:</b> Checked immediately after chest pickup (and cannon plunder), so ending within <const>130</const> units of your Home Port delivers all carried Gold &mdash; including any Gold collected or plundered during that same turn!</li>
+            <li><b>Chest Lifecycle &amp; Respawn:</b> The sector starts with <const>8</const> uncollected (active) chests (<const>2</const> Royal Chests worth <const>5</const> Gold at (<const>800</const>, <const>260</const>) and (<const>800</const>, <const>640</const>), plus <const>3</const> rotationally symmetric pairs worth <const>2</const> or <const>3</const> Gold). Active chests never move or change their Gold value. Whenever fewer than <const>4</const> active chests remain at the end of a turn, <const>1</const> new rotationally symmetric pair of chests spawns with fresh <var>chestId</var>s (<const>4</const> Gold each if within <const>280</const> units of (<const>800</const>, <const>450</const>), or <const>2</const> Gold otherwise).</li>
+          </ul>
+        </li>
       </ol>
-      <p><b>Unexecutable Actions:</b> Out-of-range <var>power</var> values are clamped to [<const>0</const>, <const>100</const>], and ship positions are clamped to the sea sector bounds. Syntactically valid actions do not cause defeat.</p>
+      <p><b>Sector Boundary:</b> Ships are confined within a <const>40</const>-unit margin inside the sea sector (<const>40</const> &le; <var>x</var> &le; <const>1560</const>, <const>40</const> &le; <var>y</var> &le; <const>860</const>). When a ship reaches or exceeds a boundary, its coordinate stops (is clamped) at that edge and the corresponding perpendicular velocity component bounces back damped by <const>0.4</const> (<code>vx = -0.4 * vx</code> or <code>vy = -0.4 * vy</code>) before water drag (<const>0.78</const>) is applied.</p>
+      <p><b>Unexecutable Actions:</b> Out-of-range <var>power</var> values are clamped to [<const>0</const>, <const>100</const>]. Syntactically valid <action>ANCHOR</action> or <action>FIRE</action> commands are ignored in Wood 3 and do not cause defeat.</p>
 
       <!-- VICTORY CONDITIONS -->
       <div class="statement-victory-conditions">
@@ -35,7 +42,8 @@
           <div class="title">Victory Conditions</div>
           <div class="text">
             <ul style="padding-bottom:0">
-              <li>You are the first to deliver at least <const>35</const> Gold to your Home Port (with a strictly higher score than your opponent), or you have delivered more Gold after <const>120</const> turns.</li>
+              <li>You are the first to deliver at least <const>35</const> Gold to your Home Port, or you have delivered more Gold than your opponent after <const>120</const> turns.</li>
+              <li>If both players have the same delivered Gold after <const>120</const> turns (or reach <const>35</const> tied on the same turn), the player carrying more Gold aboard wins (which is why carried Gold is shown in parentheses on the end screen).</li>
             </ul>
           </div>
         </div>
@@ -48,12 +56,24 @@
           <div class="title">Defeat Conditions</div>
           <div class="text">
             <ul style="padding-bottom:0">
-              <li>You have delivered less Gold than your opponent at the end of the game.</li>
+              <li>You have delivered less Gold than your opponent at the end of the game (or the same delivered Gold with less Gold carried aboard).</li>
               <li>Your program does not respond within the allotted time or outputs a malformed/unrecognized command.</li>
             </ul>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- EXPERT RULES -->
+  <div class="statement-section statement-expertrules">
+    <h1><span class="icon icon-expertrules">&nbsp;</span><span>Expert Rules</span></h1>
+    <div class="statement-rules-content">
+      <p><b>Sector Boundary Clamping &amp; Bounce:</b> When computing <code>nx = x + vx</code> and <code>ny = y + vy</code>:</p>
+      <ul>
+        <li>If <code>nx &lt; 40</code> or <code>nx &gt; 1560</code>: clamp <code>nx</code> to [<const>40</const>, <const>1560</const>] and set <code>vx = -0.4 * vx</code>.</li>
+        <li>If <code>ny &lt; 40</code> or <code>ny &gt; 860</code>: clamp <code>ny</code> to [<const>40</const>, <const>860</const>] and set <code>vy = -0.4 * vy</code>.</li>
+      </ul>
     </div>
   </div>
 
@@ -65,6 +85,7 @@
       <div class="text">
         <p><span class="statement-lineno">Line 1:</span> 3 space-separated integers <var>width</var>, <var>height</var> and <var>leagueLevel</var>, the width and height of the sea sector (<const>1600</const>&times;<const>900</const>) and the current Wood division (<const>3</const> for Wood 3, <const>2</const> for Wood 2, <const>1</const> for Wood 1).</p>
         <p><span class="statement-lineno">Line 2:</span> 6 space-separated integers <var>myPortX</var>, <var>myPortY</var>, <var>oppPortX</var>, <var>oppPortY</var>, <var>maelstromX</var> and <var>maelstromY</var>, the coordinates of your Home Port, your opponent's Home Port, and the central Maelstrom.</p>
+        <p>The Maelstrom has no effect in the current league.</p>
       </div>
     </div>
     <div class="blk">
@@ -81,14 +102,14 @@
           <li><var>gold</var>: amount of Gold currently carried aboard.</li>
           <li><var>cooldown</var>: always <const>0</const> in this division, as cannons are unavailable.</li>
         </ul>
-        <p><span class="statement-lineno">Next line:</span> an integer <var>chestCount</var>, the number of active floating treasure chests.</p>
+        <p><span class="statement-lineno">Next line:</span> an integer <var>chestCount</var>, the number of currently uncollected (active) floating treasure chests.</p>
         <p><span class="statement-lineno">Next <var>chestCount</var> lines:</span> 4 space-separated integers <var>chestId</var>, <var>cx</var>, <var>cy</var> and <var>chestGold</var>, the unique identifier, coordinates, and Gold value of each chest.</p>
       </div>
     </div>
     <div class="blk">
       <div class="title">Output for One Game Turn</div>
       <div class="text">
-        <p><span class="statement-lineno">One line per owned ship</span> (in the exact order they appear in the input), containing one movement command:</p>
+        <p><span class="statement-lineno">One line per owned ship</span> (in the exact order they appear in the input), containing one movement command (<action>SAIL</action>):</p>
         <ul>
           <li><action>SAIL</action> <var>x</var> <var>y</var> <var>power</var> to thrust toward integer coordinates (<var>x</var>, <var>y</var>) with thrust <var>power</var> (<const>0</const>&ndash;<const>100</const>).</li>
         </ul>
@@ -101,7 +122,9 @@
       <div class="text">
         <var>width</var> = <const>1600</const>, <var>height</var> = <const>900</const><br>
         <var>shipCount</var> = <const>2</const><br>
-        <const>0</const> &le; <var>chestCount</var> &le; <const>8</const><br>
+        <const>4</const> &le; <var>chestCount</var> &le; <const>8</const> (initially <const>8</const>)<br>
+        <const>2</const> &le; <var>chestGold</var> &le; <const>5</const><br>
+        <var>gold</var> &ge; <const>0</const><br>
         Response time for first turn &le; <const>1000</const> ms<br>
         Response time for one turn &le; <const>50</const> ms<br>
         Maximum number of turns: <const>120</const>

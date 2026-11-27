@@ -48,6 +48,7 @@ public class Referee extends AbstractReferee {
 
     private Random rng;
     private int leagueLevel;
+    private int nextChestId = 0;
     private final List<Ship> allShips = new ArrayList<>();
     private final List<Chest> chests = new ArrayList<>();
     private Sprite maelstromSprite;
@@ -115,18 +116,18 @@ public class Referee extends AbstractReferee {
 
     private void initChests() {
         chests.clear();
-        int cid = 0;
+        nextChestId = 0;
         // High-value Royal Chests near the Maelstrom rim
-        chests.add(new Chest(cid++, MAELSTROM_X, MAELSTROM_Y - 190, 5));
-        chests.add(new Chest(cid++, MAELSTROM_X, MAELSTROM_Y + 190, 5));
+        chests.add(new Chest(nextChestId++, MAELSTROM_X, MAELSTROM_Y - 190, 5));
+        chests.add(new Chest(nextChestId++, MAELSTROM_X, MAELSTROM_Y + 190, 5));
 
         // 3 symmetric pairs of chests across the sea
         for (int i = 0; i < 3; i++) {
             int cx = 360 + rng.nextInt(320);
             int cy = 140 + i * 280 + rng.nextInt(90);
             int gold = (cx > 560) ? 3 : 2;
-            chests.add(new Chest(cid++, cx, cy, gold));
-            chests.add(new Chest(cid++, SEA_WIDTH - cx, SEA_HEIGHT - cy, gold));
+            chests.add(new Chest(nextChestId++, cx, cy, gold));
+            chests.add(new Chest(nextChestId++, SEA_WIDTH - cx, SEA_HEIGHT - cy, gold));
         }
     }
 
@@ -496,7 +497,12 @@ public class Referee extends AbstractReferee {
                     int power = Integer.parseInt(tokens[cursor++]);
                     ship.setSailCommand(tx, ty, power);
                 } else if ("ANCHOR".equals(cmd)) {
-                    ship.setAnchorRequested(true);
+                    if (leagueLevel >= 2) {
+                        ship.setAnchorRequested(true);
+                    } else {
+                        gameManager.addToGameSummary(player.getNicknameToken()
+                            + ": ANCHOR is not unlocked in this league.");
+                    }
                 } else if ("WAIT".equals(cmd)) {
                     // Coast with current velocity
                 } else if ("FIRE".equals(cmd)) {
@@ -721,10 +727,10 @@ public class Referee extends AbstractReferee {
         for (Chest c : chests) {
             if (!c.isActive()) continue;
             Ship collector = null;
-            double bestDist = PICKUP_RADIUS;
+            double bestDist = Double.POSITIVE_INFINITY;
             for (Ship s : allShips) {
                 double d = Math.hypot(s.getX() - c.getX(), s.getY() - c.getY());
-                if (d <= bestDist) {
+                if (d <= PICKUP_RADIUS && d < bestDist) {
                     bestDist = d;
                     collector = s;
                 }
@@ -766,14 +772,22 @@ public class Referee extends AbstractReferee {
             int gold = (Math.hypot(cx - MAELSTROM_X, cy - MAELSTROM_Y) < 280) ? 4 : 2;
 
             Chest c1 = inactive.get(0);
-            c1.respawn(cx, cy, gold);
+            c1.respawn(nextChestId++, cx, cy, gold);
             c1.getGoldText().setText(gold + "g");
-            c1.getGroup().setX(toViewX(cx)).setY(toViewY(cy)).setVisible(true);
+            c1.getGroup()
+                .setX(toViewX(cx), Curve.IMMEDIATE)
+                .setY(toViewY(cy), Curve.IMMEDIATE)
+                .setVisible(true);
+            updateChestTooltip(c1);
 
             Chest c2 = inactive.get(1);
-            c2.respawn(SEA_WIDTH - cx, SEA_HEIGHT - cy, gold);
+            c2.respawn(nextChestId++, SEA_WIDTH - cx, SEA_HEIGHT - cy, gold);
             c2.getGoldText().setText(gold + "g");
-            c2.getGroup().setX(toViewX(SEA_WIDTH - cx)).setY(toViewY(SEA_HEIGHT - cy)).setVisible(true);
+            c2.getGroup()
+                .setX(toViewX(SEA_WIDTH - cx), Curve.IMMEDIATE)
+                .setY(toViewY(SEA_HEIGHT - cy), Curve.IMMEDIATE)
+                .setVisible(true);
+            updateChestTooltip(c2);
         }
     }
 
@@ -806,18 +820,27 @@ public class Referee extends AbstractReferee {
 
     @Override
     public void onEnd() {
-        // Tie-breaker: add carried cargo if scores are tied at turn 120
         Player p0 = gameManager.getPlayer(0);
         Player p1 = gameManager.getPlayer(1);
-        if (p0.getScore() == p1.getScore() && p0.getScore() >= 0 && p1.getScore() >= 0) {
-            p0.setScore(p0.getScore() * 10 + p0.getTotalCarriedGold());
-            p1.setScore(p1.getScore() * 10 + p1.getTotalCarriedGold());
+        int[] delivered = {p0.getScore(), p1.getScore()};
+
+        // Tie-breaker: add carried cargo if delivered Gold is tied at game end
+        if (delivered[0] == delivered[1] && delivered[0] >= 0 && delivered[1] >= 0) {
+            p0.setScore(delivered[0] * 1000 + p0.getTotalCarriedGold());
+            p1.setScore(delivered[1] * 1000 + p1.getTotalCarriedGold());
         }
 
-        int[] scores = gameManager.getPlayers().stream().mapToInt(Player::getScore).toArray();
-        String[] texts = gameManager.getPlayers().stream()
-            .map(p -> p.getScore() + " Gold (+ " + p.getTotalCarriedGold() + " aboard)")
-            .toArray(String[]::new);
+        int[] scores = {p0.getScore(), p1.getScore()};
+        List<Player> players = gameManager.getPlayers();
+        String[] texts = new String[players.size()];
+        for (int i = 0; i < players.size(); i++) {
+            Player p = players.get(i);
+            if (delivered[i] < 0) {
+                texts[i] = "Disqualified";
+            } else {
+                texts[i] = delivered[i] + " Gold (" + p.getTotalCarriedGold() + " aboard)";
+            }
+        }
         endScreenModule.setScores(scores, texts);
     }
 }

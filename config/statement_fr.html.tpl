@@ -4,7 +4,7 @@
   <!-- LEAGUE ALERT -->
   <!-- BEGIN level1 -->
   <div style="color: #7cc576; background-color: rgba(124, 197, 118,.1); padding: 20px; margin-bottom: 15px; text-align: left">
-    <p style="margin-bottom: 0"><b>Ligue Bois 3 :</b> Commandez <b>1 Navire Corsaire</b> soumis à la physique inertielle et à la masse de sa cargaison. Récupérez les coffres flottants et livrez-les à votre Port !</p>
+    <p style="margin-bottom: 0"><b>Ligue Bois 3 :</b> Commandez <b>1 Navire Corsaire</b> dont la physique inertielle dépend de la cargaison (plus d'Or embarqué augmente la masse et réduit l'accélération). Récupérez les coffres flottants et livrez-les à votre Port !</p>
   </div>
   <!-- END -->
   <!-- BEGIN level2 -->
@@ -31,36 +31,49 @@
     <h1><span class="icon icon-rules">&nbsp;</span><span>Règles</span></h1>
     <div class="statement-rules-content">
       <!-- BEGIN level1 -->
-      <p>La bataille navale se déroule dans un secteur maritime de <const>1600</const>&times;<const>900</const> à symétrie centrale, avec cinématique inertielle et masse de cargaison variable. Les coordonnées suivent la convention standard : <var>x</var> croît vers la droite, <var>y</var> croît vers le bas et <const>(0, 0)</const> correspond au coin supérieur gauche.</p>
+      <p>La bataille navale se déroule dans un secteur maritime de <const>1600</const>&times;<const>900</const> à symétrie centrale, avec cinématique inertielle où l'Or embarqué augmente la masse du navire et réduit son accélération. Les coordonnées suivent la convention standard : <var>x</var> croît vers la droite, <var>y</var> croît vers le bas et <const>(0, 0)</const> correspond au coin supérieur gauche.</p>
       <!-- END -->
       <!-- BEGIN level2 level3 -->
-      <p>La bataille navale se déroule dans un secteur maritime de <const>1600</const>&times;<const>900</const> à symétrie centrale, avec cinématique inertielle, masse de cargaison variable et courants marins rotatifs. Les coordonnées suivent la convention standard : <var>x</var> croît vers la droite, <var>y</var> croît vers le bas et <const>(0, 0)</const> correspond au coin supérieur gauche.</p>
+      <p>La bataille navale se déroule dans un secteur maritime de <const>1600</const>&times;<const>900</const> à symétrie centrale, avec cinématique inertielle (où l'Or embarqué augmente la masse et réduit l'accélération) et courants marins rotatifs. Les coordonnées suivent la convention standard : <var>x</var> croît vers la droite, <var>y</var> croît vers le bas et <const>(0, 0)</const> correspond au coin supérieur gauche.</p>
       <!-- END -->
 
       <h3 style="font-size: 16px; font-weight: 700; padding-top: 10px">Ordre de Résolution d'un Tour</h3>
       <ol>
-        <li><b>Navigation Inertielle (<action>SAIL</action> <var>x</var> <var>y</var> <var>power</var>) :</b> Applique une poussée (<const>0</const> &le; <var>power</var> &le; <const>100</const>) vers (<var>x</var>, <var>y</var>). Plus la cargaison d'or est lourde, plus l'accélération diminue :
+        <li><b>Navigation Inertielle (<action>SAIL</action> <var>x</var> <var>y</var> <var>power</var>) :</b> Applique une poussée (<const>0</const> &le; <var>power</var> &le; <const>100</const>) vers (<var>x</var>, <var>y</var>). L'Or embarqué alourdit le navire et réduit l'accélération :
           <br><code>accel = power / (1.0 + 0.15 * gold)</code></li>
         <!-- BEGIN level2 level3 -->
-        <li><b>Frein d'Urgence (<action>ANCHOR</action>) :</b> Réduit immédiatement la vitesse courante de <const>75%</const> (<code>vx *= 0.25, vy *= 0.25</code>) et divise par deux l'attraction du Maelström pour ce tour.</li>
-        <li><b>Vortex du Maelström :</b> Dans un rayon de <const>380</const> unités autour du centre (<const>800</const>, <const>450</const>), un courant tourbillonnant anti-horaire et une aspiration centripète s'ajoutent à la vitesse de chaque navire. Tout navire terminant son mouvement à moins de <const>65</const> unités de (<const>800</const>, <const>450</const>) fait <b>naufrage</b> : il perd tout son or embarqué et réapparaît à son Port !</li>
+        <li><b>Frein d'Urgence (<action>ANCHOR</action>) :</b> Réduit immédiatement la vitesse courante de <const>75%</const> (<code>vx *= 0.25, vy *= 0.25</code>) et divise par deux les courants du Maelström pour ce tour.</li>
+        <li><b>Courants du Vortex du Maelström :</b> Dans un rayon de <const>380</const> unités autour du centre (<const>800</const>, <const>450</const>), des courants combinant tourbillon anti-horaire et aspiration centripète s'ajoutent à la vitesse de chaque navire (voir les <b>Règles Expertes</b> pour les formules exactes).</li>
         <!-- END -->
         <!-- BEGIN level1 -->
-        <li><b>Cinématique &amp; Traînée Marine :</b> À chaque tour, après ajout de la poussée à (<var>vx</var>, <var>vy</var>), le navire se déplace en (<var>x</var> + <var>vx</var>, <var>y</var> + <var>vy</var>), puis la traînée de l'eau multiplie (<var>vx</var>, <var>vy</var>) par <const>0.78</const>.</li>
+        <li><b>Cinématique &amp; Traînée Marine :</b> À chaque tour, après ajout de la poussée à (<var>vx</var>, <var>vy</var>), le navire se déplace en (<var>x</var> + <var>vx</var>, <var>y</var> + <var>vy</var>), rebondit contre les limites du secteur s'il les atteint, puis la traînée de l'eau multiplie (<var>vx</var>, <var>vy</var>) par <const>0.78</const>.</li>
         <!-- END -->
         <!-- BEGIN level2 level3 -->
-        <li><b>Cinématique &amp; Traînée Marine :</b> À chaque tour, après ajout de la poussée et des courants à (<var>vx</var>, <var>vy</var>), le navire se déplace en (<var>x</var> + <var>vx</var>, <var>y</var> + <var>vy</var>), puis la traînée de l'eau multiplie (<var>vx</var>, <var>vy</var>) par <const>0.78</const>.</li>
+        <li><b>Cinématique &amp; Traînée Marine :</b> À chaque tour, après ajout de la poussée et des courants du Maelström à (<var>vx</var>, <var>vy</var>), le navire se déplace en (<var>x</var> + <var>vx</var>, <var>y</var> + <var>vy</var>), rebondit contre les limites du secteur s'il les atteint, puis la traînée de l'eau multiplie (<var>vx</var>, <var>vy</var>) par <const>0.78</const>.</li>
         <!-- END -->
         <!-- BEGIN level3 -->
-        <li><b>Canons (<action>FIRE</action> <var>tx</var> <var>ty</var>) :</b> Utilisable seul ou à la suite de <action>SAIL</action> / <action>ANCHOR</action> lorsque <var>cooldown</var> = <const>0</const> (portée euclidienne depuis le navire tireur &le; <const>450</const>, passe <var>cooldown</var> à <const>2</const>). Tout navire à moins de <const>115</const> unités de (<var>tx</var>, <var>ty</var>) subit une onde de choc et perd jusqu'à <const>2</const> pièces d'Or (immédiatement pillées par le navire tireur s'il s'agit d'un ennemi !).</li>
+        <li><b>Canons (<action>FIRE</action> <var>tx</var> <var>ty</var>) :</b> Exécuté après le déplacement des navires, seul ou à la suite de <action>SAIL</action> / <action>ANCHOR</action> lorsque <var>cooldown</var> = <const>0</const> (passe <var>cooldown</var> à <const>2</const>). Si (<var>tx</var>, <var>ty</var>) est à plus de <const>450</const> unités du navire tireur, le point d'impact est ramené à distance <const>450</const> dans la direction visée. Tout navire (allié ou adverse) situé à moins de <const>115</const> unités de l'impact subit une onde de choc (voir les <b>Règles Expertes</b>). Si un navire touché appartient à votre adversaire et transporte de l'Or, jusqu'à <const>2</const> pièces de son Or embarqué sont <b>pillées directement</b> (transférées immédiatement dans la cale du navire tireur ; si l'ennemi porte <const>0</const> Or ou si aucun ennemi n'est touché, aucun Or n'est transféré, et toucher un navire allié ne lui fait jamais perdre d'Or).</li>
         <!-- END -->
-        <li><b>Pillage &amp; Livraison :</b> Passer à moins de <const>85</const> unités d'un Coffre au Trésor charge son Or à bord. Entrer à moins de <const>130</const> unités de votre Port livre tout votre Or embarqué à votre score !</li>
+        <!-- BEGIN level2 level3 -->
+        <li><b>Naufrage dans l'Œil du Maelström :</b> Tout navire dont la position à cette étape est à moins de <const>65</const> unités de (<const>800</const>, <const>450</const>) fait <b>naufrage</b> : il perd tout son Or embarqué, ses composantes de vitesse <var>vx</var> et <var>vy</var> sont remises à <const>0</const> et il réapparaît à son Port.</li>
+        <!-- END -->
+        <li><b>Pillage &amp; Livraison :</b> Seule la <b>position finale</b> du navire à la fin du tour est évaluée (et non les points intermédiaires de sa trajectoire) :
+          <ul>
+            <li><b>Ramassage des coffres :</b> Terminer à distance &le; <const>85</const> d'un Coffre au Trésor actif charge son Or à bord et retire le coffre de la mer (il devient inactif). Un seul navire peut ramasser un coffre donné : si plusieurs navires terminent à moins de <const>85</const> unités du même coffre, le plus proche le récupère (plus petit <var>shipId</var> en cas d'égalité exacte).</li>
+            <li><b>Livraison au Port :</b> Vérifiée immédiatement après le ramassage des coffres (et le pillage au canon), donc terminer à distance &le; <const>130</const> de votre Port livre tout l'Or embarqué &mdash; y compris l'Or ramassé ou pillé durant ce même tour !</li>
+            <li><b>Cycle de vie et réapparition des coffres :</b> Le secteur commence avec <const>8</const> coffres non ramassés (actifs) (<const>2</const> Coffres Royaux valant <const>5</const> Or en (<const>800</const>, <const>260</const>) et (<const>800</const>, <const>640</const>), plus <const>3</const> paires à symétrie centrale valant <const>2</const> ou <const>3</const> Or). Les coffres actifs ne se déplacent jamais et leur valeur reste fixe. Dès qu'il reste moins de <const>4</const> coffres actifs en fin de tour, <const>1</const> nouvelle paire symétrique apparaît avec de nouveaux <var>chestId</var> (<const>4</const> Or chacun à moins de <const>280</const> unités de (<const>800</const>, <const>450</const>), ou <const>2</const> Or sinon).</li>
+          </ul>
+        </li>
       </ol>
-      <!-- BEGIN level1 level2 -->
-      <p><b>Actions inexécutables :</b> Les valeurs de <var>power</var> hors bornes sont ramenées dans [<const>0</const>, <const>100</const>], et les positions sont maintenues dans les limites du secteur. Les commandes syntaxiquement valides n'entraînent pas la défaite.</p>
+      <p><b>Limites du Secteur :</b> Les navires restent confinés à l'intérieur d'une marge de <const>40</const> unités (<const>40</const> &le; <var>x</var> &le; <const>1560</const>, <const>40</const> &le; <var>y</var> &le; <const>860</const>). Lorsqu'un navire atteint ou dépasse une bordure, sa position s'y arrête et la composante perpendiculaire de sa vitesse rebondit avec un amortissement de <const>0.4</const> (<code>vx = -0.4 * vx</code> ou <code>vy = -0.4 * vy</code>) avant l'application de la traînée de l'eau (<const>0.78</const>).</p>
+      <!-- BEGIN level1 -->
+      <p><b>Actions inexécutables :</b> Les valeurs de <var>power</var> hors bornes sont ramenées dans [<const>0</const>, <const>100</const>]. Les commandes syntaxiquement valides <action>ANCHOR</action> ou <action>FIRE</action> sont ignorées en Bois 3 et n'entraînent pas la défaite.</p>
+      <!-- END -->
+      <!-- BEGIN level2 -->
+      <p><b>Actions inexécutables :</b> Les valeurs de <var>power</var> hors bornes sont ramenées dans [<const>0</const>, <const>100</const>]. Les commandes syntaxiquement valides <action>FIRE</action> sont ignorées en Bois 2 et n'entraînent pas la défaite.</p>
       <!-- END -->
       <!-- BEGIN level3 -->
-      <p><b>Actions inexécutables :</b> Les valeurs de <var>power</var> hors bornes sont ramenées dans [<const>0</const>, <const>100</const>], et les commandes <action>FIRE</action> envoyées avec <var>cooldown</var> &gt; <const>0</const> ou au-delà de la portée <const>450</const> sont simplement ignorées et n'entraînent pas la défaite.</p>
+      <p><b>Actions inexécutables :</b> Les valeurs de <var>power</var> hors bornes sont ramenées dans [<const>0</const>, <const>100</const>]. Les commandes <action>FIRE</action> envoyées avec <var>cooldown</var> &gt; <const>0</const> sont ignorées, et les cibles au-delà de la portée <const>450</const> sont ramenées à distance <const>450</const>. Les commandes syntaxiquement valides n'entraînent pas la défaite.</p>
       <!-- END -->
 
       <!-- VICTORY CONDITIONS -->
@@ -70,7 +83,8 @@
           <div class="title">Conditions de Victoire</div>
           <div class="text">
             <ul style="padding-bottom:0">
-              <li>Vous êtes le premier à livrer au moins <const>35</const> Or à votre Port (avec un score strictement supérieur à votre adversaire), ou vous avez livré plus d'Or au bout des <const>120</const> tours.</li>
+              <li>Vous êtes le premier à livrer au moins <const>35</const> Or à votre Port, ou vous avez livré plus d'Or que votre adversaire au bout des <const>120</const> tours.</li>
+              <li>En cas d'égalité d'Or livré après <const>120</const> tours (ou si les deux flottes atteignent <const>35</const> au même tour), le joueur transportant le plus d'Or à bord remporte la victoire (c'est pourquoi l'Or à bord est affiché entre parenthèses sur l'écran de fin).</li>
             </ul>
           </div>
         </div>
@@ -83,12 +97,42 @@
           <div class="title">Conditions de Défaite</div>
           <div class="text">
             <ul style="padding-bottom:0">
-              <li>Vous avez livré moins d'Or que votre adversaire à la fin de la partie.</li>
+              <li>Vous avez livré moins d'Or que votre adversaire à la fin de la partie (ou autant d'Or livré avec moins d'Or à bord).</li>
               <li>Votre programme ne répond pas dans le temps imparti ou affiche une commande mal formée / non reconnue.</li>
             </ul>
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- EXPERT RULES -->
+  <div class="statement-section statement-expertrules">
+    <h1><span class="icon icon-expertrules">&nbsp;</span><span>Règles Expertes</span></h1>
+    <div class="statement-rules-content">
+      <p><b>Limites du Secteur &amp; Rebond :</b> Lors du calcul de <code>nx = x + vx</code> et <code>ny = y + vy</code> :</p>
+      <ul>
+        <li>Si <code>nx &lt; 40</code> ou <code>nx &gt; 1560</code> : ramener <code>nx</code> dans [<const>40</const>, <const>1560</const>] et appliquer <code>vx = -0.4 * vx</code>.</li>
+        <li>Si <code>ny &lt; 40</code> ou <code>ny &gt; 860</code> : ramener <code>ny</code> dans [<const>40</const>, <const>860</const>] et appliquer <code>vy = -0.4 * vy</code>.</li>
+      </ul>
+      <!-- BEGIN level2 level3 -->
+      <p><b>Champ Vectoriel du Vortex du Maelström :</b> Soient <code>rx = 800 - x</code>, <code>ry = 450 - y</code> et <code>r = hypot(rx, ry)</code>. Lorsque <const>0.001</const> &lt; <code>r</code> &le; <const>380</const> :</p>
+      <ul>
+        <li>Vecteur unitaire radial (vers le centre) : <code>urx = rx / r</code>, <code>ury = ry / r</code></li>
+        <li>Vecteur unitaire tangentiel (anti-horaire à l'écran) : <code>utx = -ury</code>, <code>uty = urx</code></li>
+        <li>Intensité : <code>intensity = 1.0 - (r / 380.0)</code>, <code>swirl = 18.0 + 26.0 * intensity</code>, <code>pull = 10.0 + 22.0 * intensity</code></li>
+        <li>Vecteur ajouté à la vitesse avant déplacement : <code>(utx * swirl + urx * pull) * anchorDamping</code>, avec <code>anchorDamping = 0.5</code> si <action>ANCHOR</action> est actif et <const>1.0</const> sinon.</li>
+      </ul>
+      <!-- END -->
+      <!-- BEGIN level3 -->
+      <p><b>Onde de Choc des Canons :</b> Les tirs sont résolus par <var>shipId</var> croissant. Pour un point d'impact (<var>fx</var>, <var>fy</var>) (ramené à portée &le; <const>450</const>), chaque navire à distance <code>d = hypot(tx - fx, ty - fy) &le; 115</code> subit :</p>
+      <ul>
+        <li>Direction : <code>ux = (tx - fx) / d</code>, <code>uy = (ty - fy) / d</code> (si <code>d &lt; 0.001</code>, <code>ux = (shooterX &lt; fx ? 1 : -1)</code>, <code>uy = 0</code>)</li>
+        <li>Facteur d'atténuation : <code>scale = 1.0 - 0.35 * (d / 115.0)</code></li>
+        <li>Impulsion de vitesse : <code>vx += ux * 95.0 * scale</code>, <code>vy += uy * 95.0 * scale</code></li>
+        <li>Déplacement immédiat (ramené dans [<const>40</const>, <const>1560</const>] &times; [<const>40</const>, <const>860</const>]) : <code>tx += ux * 45.0 * scale</code>, <code>ty += uy * 45.0 * scale</code>.</li>
+      </ul>
+      <!-- END -->
     </div>
   </div>
 
@@ -100,6 +144,9 @@
       <div class="text">
         <p><span class="statement-lineno">Ligne 1 :</span> 3 entiers séparés par des espaces <var>width</var>, <var>height</var> et <var>leagueLevel</var>, la largeur et la hauteur du secteur maritime (<const>1600</const>&times;<const>900</const>) ainsi que la division Bois actuelle (<const>3</const> pour Bois 3, <const>2</const> pour Bois 2, <const>1</const> pour Bois 1).</p>
         <p><span class="statement-lineno">Ligne 2 :</span> 6 entiers séparés par des espaces <var>myPortX</var>, <var>myPortY</var>, <var>oppPortX</var>, <var>oppPortY</var>, <var>maelstromX</var> et <var>maelstromY</var>, les coordonnées de votre Port, du Port adverse et du Maelström central.</p>
+        <!-- BEGIN level1 -->
+        <p>Le Maelström n'a aucun effet dans la ligue actuelle.</p>
+        <!-- END -->
       </div>
     </div>
     <div class="blk">
@@ -121,18 +168,21 @@
           <li><var>cooldown</var> : nombre de tours restants avant de pouvoir tirer à nouveau au canon.</li>
           <!-- END -->
         </ul>
-        <p><span class="statement-lineno">Ligne suivante :</span> un entier <var>chestCount</var>, le nombre de coffres au trésor flottants actifs.</p>
+        <p><span class="statement-lineno">Ligne suivante :</span> un entier <var>chestCount</var>, le nombre de coffres au trésor flottants non encore ramassés (actifs).</p>
         <p><span class="statement-lineno">Les <var>chestCount</var> lignes suivantes :</span> 4 entiers séparés par des espaces <var>chestId</var>, <var>cx</var>, <var>cy</var> et <var>chestGold</var>, l'identifiant, les coordonnées et la valeur en Or de chaque coffre.</p>
       </div>
     </div>
     <div class="blk">
       <div class="title">Sortie pour un Tour de Jeu</div>
       <div class="text">
-        <!-- BEGIN level1 level2 -->
-        <p><span class="statement-lineno">Une ligne par navire que vous possédez</span> (dans l'ordre exact où ils apparaissent en entrée), contenant une commande de navigation :</p>
+        <!-- BEGIN level1 -->
+        <p><span class="statement-lineno">Une ligne par navire que vous possédez</span> (dans l'ordre exact où ils apparaissent en entrée), contenant une commande de navigation (<action>SAIL</action>) :</p>
+        <!-- END -->
+        <!-- BEGIN level2 -->
+        <p><span class="statement-lineno">Une ligne par navire que vous possédez</span> (dans l'ordre exact où ils apparaissent en entrée), contenant une commande de navigation (<action>SAIL</action> ou <action>ANCHOR</action>) :</p>
         <!-- END -->
         <!-- BEGIN level3 -->
-        <p><span class="statement-lineno">Une ligne par navire que vous possédez</span> (dans l'ordre exact où ils apparaissent en entrée), contenant une commande de navigation éventuellement suivie d'un tir de canon :</p>
+        <p><span class="statement-lineno">Une ligne par navire que vous possédez</span> (dans l'ordre exact où ils apparaissent en entrée), contenant une commande de navigation (<action>SAIL</action> ou <action>ANCHOR</action>) éventuellement suivie d'un tir de canon, ou un tir de canon seul :</p>
         <!-- END -->
         <ul>
           <li><action>SAIL</action> <var>x</var> <var>y</var> <var>power</var> pour pousser le navire vers les coordonnées entières (<var>x</var>, <var>y</var>) avec une puissance <var>power</var> (<const>0</const>&ndash;<const>100</const>).</li>
@@ -141,7 +191,7 @@
           <!-- END -->
         </ul>
         <!-- BEGIN level3 -->
-        <p>Une commande <action>SAIL</action> ou <action>ANCHOR</action> peut être suivie d'un tir de canon (qui peut aussi être utilisé seul) :</p>
+        <p>Un tir de canon s'effectue avec la syntaxe suivante :</p>
         <ul>
           <li><action>FIRE</action> <var>tx</var> <var>ty</var> pour tirer au canon sur les coordonnées entières (<var>tx</var>, <var>ty</var>).</li>
         </ul>
@@ -153,7 +203,7 @@
         <p>Exemples : <action>SAIL 800 450 90</action> ou <action>ANCHOR</action></p>
         <!-- END -->
         <!-- BEGIN level3 -->
-        <p>Exemple : <action>SAIL 800 450 90 FIRE 750 400</action></p>
+        <p>Exemples : <action>SAIL 800 450 90 FIRE 750 400</action> ou <action>FIRE 750 400</action></p>
         <!-- END -->
         <p>Vous pouvez facultativement ajouter <action>MSG</action> <var>text</var> en fin de ligne pour afficher un message dans le viewer.</p>
       </div>
@@ -164,11 +214,14 @@
         <var>width</var> = <const>1600</const>, <var>height</var> = <const>900</const><br>
         <!-- BEGIN level1 -->
         <var>shipCount</var> = <const>2</const><br>
+        <const>4</const> &le; <var>chestCount</var> &le; <const>8</const> (initialement <const>8</const>)<br>
         <!-- END -->
         <!-- BEGIN level2 level3 -->
         <var>shipCount</var> = <const>4</const><br>
+        <const>2</const> &le; <var>chestCount</var> &le; <const>8</const> (initialement <const>8</const>)<br>
         <!-- END -->
-        <const>0</const> &le; <var>chestCount</var> &le; <const>8</const><br>
+        <const>2</const> &le; <var>chestGold</var> &le; <const>5</const><br>
+        <var>gold</var> &ge; <const>0</const><br>
         Temps de réponse pour le premier tour &le; <const>1000</const> ms<br>
         Temps de réponse par tour &le; <const>50</const> ms<br>
         Nombre maximum de tours : <const>120</const>
